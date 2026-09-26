@@ -1,0 +1,23 @@
+# Stage 1: Build JAR using Gradle with Java 21
+FROM gradle:8.7-jdk21 AS build
+WORKDIR /app
+
+# Project files copy karein
+COPY . .
+
+# gradlew ko execute permission dein aur jar package banayein
+RUN chmod +x gradlew
+RUN ./gradlew bootJar --no-daemon -x test
+
+# Stage 2: Run the application on lightweight Java 21 JRE
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+
+# Stage 1 se bani hui jar file ko copy karein
+COPY --from=build /app/build/libs/*.jar app.jar
+
+# Port expose karein
+EXPOSE 8080
+
+# Application start karne ki command
+ENTRYPOINT ["java", "-jar", "app.jar"]
